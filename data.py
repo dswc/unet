@@ -5,6 +5,7 @@ import os
 import glob
 import skimage.io as io
 import skimage.transform as trans
+import cv2
 
 Sky = [128,128,128]
 Building = [128,0,0]
@@ -22,8 +23,11 @@ Unlabelled = [0,0,0]
 COLOR_DICT = np.array([Sky, Building, Pole, Road, Pavement,
                           Tree, SignSymbol, Fence, Car, Pedestrian, Bicyclist, Unlabelled])
 
+crop_height = 256
+crop_width = 256
 
-def adjustData(img,mask,flag_multi_class,num_class):
+
+def adjustData(img,mask, flag_multi_class, num_class):
     if(flag_multi_class):
         img = img / 255
         mask = mask[:,:,:,0] if(len(mask.shape) == 4) else mask[:,:,0]
@@ -45,9 +49,9 @@ def adjustData(img,mask,flag_multi_class,num_class):
 
 
 
-def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image_color_mode = "grayscale",
-                    mask_color_mode = "grayscale",image_save_prefix  = "image",mask_save_prefix  = "mask",
-                    flag_multi_class = False,num_class = 2,save_to_dir = None,target_size = (256,256),seed = 1):
+def trainGenerator(batch_size, train_path,image_folder, mask_folder, aug_dict, image_color_mode = "grayscale",
+                    mask_color_mode = "grayscale", image_save_prefix  = "image", mask_save_prefix  = "mask",
+                    flag_multi_class = False, num_class = 2, save_to_dir = None, target_size = (256,256), seed = 1):
     '''
     can generate image and mask at the same time
     use the same seed for image_datagen and mask_datagen to ensure the transformation for image and mask is the same
@@ -82,18 +86,19 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image
 
 
 
-def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
-    for i in range(num_image):
-        img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
+def testGenerator(test_path, num_image=5, target_size=(256,256), flag_multi_class=False, as_gray=True):
+    test_file_names = os.listdir(test_path)
+    for i in test_file_names:
+        img = io.imread(os.path.join(test_path, i), as_gray = as_gray)
         img = img / 255
-        img = trans.resize(img,target_size)
-        img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
-        img = np.reshape(img,(1,)+img.shape)
+        img = trans.resize(img, target_size)
+        img = np.reshape(img, img.shape+(1,)) if (not flag_multi_class) else img
+        img = np.reshape(img, (1,)+img.shape)
         yield img
 
 
-def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,image_prefix = "image",mask_prefix = "mask",image_as_gray = True,mask_as_gray = True):
-    image_name_arr = glob.glob(os.path.join(image_path,"%s*.png"%image_prefix))
+def geneTrainNpy(image_path, mask_path, flag_multi_class = False, num_class = 2, image_prefix = "image", mask_prefix = "mask", image_as_gray = True, mask_as_gray = True):
+    image_name_arr = glob.glob(os.path.join(image_path,"%s*.bmp"%image_prefix))
     image_arr = []
     mask_arr = []
     for index,item in enumerate(image_name_arr):
@@ -109,7 +114,7 @@ def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,ima
     return image_arr,mask_arr
 
 
-def labelVisualize(num_class,color_dict,img):
+def labelVisualize(num_class, color_dict, img):
     img = img[:,:,0] if len(img.shape) == 3 else img
     img_out = np.zeros(img.shape + (3,))
     for i in range(num_class):
@@ -118,7 +123,46 @@ def labelVisualize(num_class,color_dict,img):
 
 
 
-def saveResult(save_path,npyfile,flag_multi_class = False,num_class = 2):
+def saveResult(save_path, npyfile, flag_multi_class = False, num_class = 2):
     for i,item in enumerate(npyfile):
-        img = labelVisualize(num_class,COLOR_DICT,item) if flag_multi_class else item[:,:,0]
-        io.imsave(os.path.join(save_path,"%d_predict.png"%i),img)
+        img = labelVisualize(num_class, COLOR_DICT, item) if flag_multi_class else item[:, :, 0]
+        io.imsave(os.path.join(save_path, "%d_predict.bmp"%i), img)
+
+
+def cropImageNonOverlap(image_path, save_crop_path):
+    image_names = os.listdir(image_path)
+    for i in image_names:
+        img = cv2.imread(os.path.join(image_path, i), 0)
+        if img is None:
+            print(i)
+            continue
+        height, width = img.shape
+        num_crop_height = int(np.ceil(height / crop_height))
+        num_crop_width = int(np.ceil(width / crop_width))
+        for row in range(num_crop_height):
+            row_s = row * crop_height
+            row_e = row * crop_height + crop_height
+            if row_e > height:
+                row_s = height - crop_height
+                row_e = height
+                
+            for col in range(num_crop_width):
+                col_s = col * crop_width
+                col_e = col * crop_width + crop_width
+                if col_e > width:
+                    col_s = width - crop_width
+                    col_e = width
+                
+                croped_img = img[row_s:row_e, col_s:col_e]
+                cv2.imwrite(os.path.join(save_crop_path, "%s_%d_%d.bmp" % (i.split('.')[0], row, col)), croped_img)
+    
+
+
+if __name__ == "__main__":
+    image_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\image'
+    mask_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\label'
+    save_crop_img_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\crop_img'
+    save_crop_mask_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\crop_label'
+    cropImageNonOverlap(image_path, save_crop_img_path)
+    cropImageNonOverlap(mask_path, save_crop_mask_path)
+
