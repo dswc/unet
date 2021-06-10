@@ -45,8 +45,9 @@ Loss function for the training is basically just a binary crossentropy.
 
 This tutorial depends on the following libraries:
 
-* Tensorflow
-* Keras >= 1.0
+* Python = 3.6.6
+* Tensorflow = 1.14.0
+* Keras = 2.1.0
 
 Also, this code should be compatible with Python versions 2.7-3.5.
 
@@ -79,4 +80,3 @@ supports arbitrary connectivity schemes (including multi-input and multi-output 
 runs seamlessly on CPU and GPU.
 Read the documentation [Keras.io](http://keras.io/)
 
-Keras is compatible with: Python 2.7-3.5.

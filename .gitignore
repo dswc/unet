@@ -1,2 +1,6 @@
 data
+__pycache__
+
 *.hdf5
+*.png
+*.bmp
