@@ -18,6 +18,9 @@ The data for training contains 30 512*512 images, which are far not enough to fe
 
 See dataPrepare.ipynb and data.py for detail.
 
+### Input
+
+The input size is [1, 256, 256, 1].
 
 ### Model
 
@@ -25,8 +28,10 @@ See dataPrepare.ipynb and data.py for detail.
 
 This deep neural network is implemented with Keras functional API, which makes it extremely easy to experiment with different interesting architectures.
 
-Output from the network is a 512*512 which represents mask that should be learned. Sigmoid activation function
-makes sure that mask pixels are in \[0, 1\] range.
+### Output
+
+Output from the network is a [1, 256, 256, 1] which represents mask that should be learned.
+Sigmoid activation function makes sure that mask pixels are in \[0, 1\] range.
 
 ### Training
 
