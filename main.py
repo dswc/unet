@@ -39,19 +39,19 @@ else:
 
 image_names = os.listdir(test_img_path)
 for i in image_names:
-    # img_uint8 = cv2.imread(os.path.join(test_img_path, i), cv2.IMREAD_GRAYSCALE)
-    img_uint8 = io.imread(os.path.join(test_img_path, i), as_gray = True)
-    if img_uint8 is None:
+    img = cv2.imread(os.path.join(test_img_path, i))
+    
+    if img is None:
         print(i)
         continue
     
-    # img = img_uint8.astype(np.float64) / 255
-    img = img_uint8
+    b, g, r = cv2.split(img)
+    img = g.astype(np.float32) / 255
     height, width = img.shape
     num_crop_height = int(np.ceil(height / crop_height))
     num_crop_width = int(np.ceil(width / crop_width))
     
-    dst_img = np.zeros((height, width), dtype=np.float64)
+    dst_img = np.zeros((height, width), dtype=np.float32)
     for row in range(num_crop_height):
         row_s = row * crop_height
         row_e = row * crop_height + crop_height
@@ -73,12 +73,10 @@ for i in image_names:
             croped_img = np.reshape(croped_img, (1,)+croped_img.shape)
             res = model.predict(croped_img)
             
-            io.imsave(os.path.join(save_img_path, '%d_%d.bmp' % (row, col)), res[0, :, :, 0])
-            
+            # io.imsave(os.path.join(save_img_path, '%d_%d.bmp' % (row, col)), res[0, :, :, 0])
             dst_img[row_s:row_e, col_s:col_e] = res[0, :, :, 0]
-            
-    # cv2.imwrite(os.path.join(save_img_path, i), dst_img)
-    dst_img = dst_img
-    # dst_img_uint8 = dst_img.astype(np.uint8)
-    io.imsave(os.path.join(save_img_path, i), dst_img)
-
+    dst_img = dst_img * 255
+    dst_img = dst_img.astype(np.uint8)
+    dst_img[dst_img > 127] = 255
+    dst_img[dst_img <= 127] = 0
+    cv2.imwrite(os.path.join(save_img_path, i), dst_img)
