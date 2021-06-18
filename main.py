@@ -8,7 +8,7 @@ import skimage.transform as trans
 
 is_train = False
 epochs = 200
-steps_per_epoch = 300
+steps_per_epoch = 210
 batch_size = 10
 crop_height = 256
 crop_width = 256
@@ -71,6 +71,8 @@ for i in image_names:
             # croped_img = trans.resize(croped_img, (256, 256))
             croped_img = np.reshape(croped_img, croped_img.shape+(1,))
             croped_img = np.reshape(croped_img, (1,)+croped_img.shape)
+            
+            # input_1 to have shape (None, 256, 256, 1)
             res = model.predict(croped_img)
             
             # io.imsave(os.path.join(save_img_path, '%d_%d.bmp' % (row, col)), res[0, :, :, 0])

@@ -165,4 +165,3 @@ if __name__ == "__main__":
     save_crop_mask_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\crop_label'
     cropImageNonOverlap(image_path, save_crop_img_path)
     cropImageNonOverlap(mask_path, save_crop_mask_path)
-
