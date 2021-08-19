@@ -3,7 +3,8 @@ from model import *
 from data import *
 import os
 import cv2
-import skimage.transform as trans
+import numpy as np
+# import skimage.transform as trans
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -43,17 +44,26 @@ for i in image_names:
                 col_s = width - crop_width
                 col_e = width
 
-            croped_img = img[row_s:row_e, col_s:col_e]
+            if row_s < 0:
+                row_s = 0
+            if col_s <0:
+                col_s = 0
+            cropped_img = img[row_s:row_e, col_s:col_e]
+            cropped_h, cropped_w = cropped_img.shape
+            if cropped_h < crop_height:
+                cropped_img = np.pad(cropped_img, ((0, crop_height-cropped_h), (0, 0)), 'constant')
+            if cropped_w < crop_width:
+                cropped_img = np.pad(cropped_img, ((0, 0), (0, crop_width-cropped_w)), 'constant')
 
             # croped_img = trans.resize(croped_img, (256, 256))
-            croped_img = np.reshape(croped_img, croped_img.shape + (1,))
-            croped_img = np.reshape(croped_img, (1,) + croped_img.shape)
+            cropped_img = np.reshape(cropped_img, cropped_img.shape + (1,))
+            cropped_img = np.reshape(cropped_img, (1,) + cropped_img.shape)
 
             # input_1 to have shape (None, 256, 256, 1)
-            res = model.predict(croped_img)
+            res = model.predict(cropped_img)
 
             # io.imsave(os.path.join(save_img_path, '%d_%d.bmp' % (row, col)), res[0, :, :, 0])
-            dst_img[row_s:row_e, col_s:col_e] = res[0, :, :, 0]
+            dst_img[row_s:row_e, col_s:col_e] = res[0, 0:cropped_h, 0:cropped_w, 0]
     dst_img = dst_img * 255
     dst_img = dst_img.astype(np.uint8)
     dst_img[dst_img > 127] = 255
