@@ -6,6 +6,8 @@ import glob
 import skimage.io as io
 import skimage.transform as trans
 import cv2
+from conf import *
+
 
 Sky = [128,128,128]
 Building = [128,0,0]
@@ -159,9 +161,10 @@ def cropImageNonOverlap(image_path, save_crop_path):
 
 
 if __name__ == "__main__":
-    image_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\image'
-    mask_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\label'
-    save_crop_img_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\crop_img'
-    save_crop_mask_path = r'C:\Users\User\Desktop\ma-tek-ai\unet\data\matek\train\crop_label'
+    image_path = os.path.join(train_img_path, train_original_img_dir)
+    mask_path = os.path.join(train_img_path, train_original_label_dir)
+    save_crop_img_path = os.path.join(train_img_path, train_img_dir)
+    save_crop_mask_path = os.path.join(train_img_path, train_label_dir)
     cropImageNonOverlap(image_path, save_crop_img_path)
     cropImageNonOverlap(mask_path, save_crop_mask_path)
+    print('[Info] Done.')
